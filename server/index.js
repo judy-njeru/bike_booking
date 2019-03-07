@@ -1,43 +1,15 @@
-const express = require('express');
-const mongoClient = require('mongodb').MongoClient();
+const express =  require('express');
 const bodyParser = require('body-parser');
+const cors = require('cors');
+
 const app = express();
-const port = 3001;
-const mongoURL = "mongodb://localhost:27017/bikes_booking";
-
 
 app.use(bodyParser.json());
+app.use(cors());
 
-app.use(bodyParser.json());
-app.use((req, res, next)=>{
-  res.header("Access-Control-Allow-Origin", "http://localhost:8080");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-  res.header("Access-Control-Allow-Credentials", "true");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, cache-control, postman-token, Access-Control-Allow-Origin");
-  next();;
-})
+const bikes = require('./routes/apis/bikes');
+app.use('/apis/bikes', bikes);
 
-//.........................................GET USERS...................................
-app.get("/api/bikes", (req, res)=>{
-    try {
-        mongoClient.connect(mongoURL, (err, db)=>{ 
-            db.collection("bikes").find({},(err, result)=>{
-              if(err) throw err;
-              result.toArray().then(result=>{
-                res.end(JSON.stringify(result));
-              });
-            })
-        })
-    }catch(error){
-        console.log(error)
-    }
-})
+const port = process.env.PORT || 3000;
 
-app.listen(port, (err)=>{
-  if(err){
-    console.log("there was a problem with port " + port);
-    console.log(err);
-  }else{
-    console.log("listening to port " + port);
-  }
-})
+app.listen( port,()=> console.log(`Server started on port ${port}`));

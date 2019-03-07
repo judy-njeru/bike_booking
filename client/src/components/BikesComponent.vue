@@ -2,59 +2,82 @@
     <div class="container">
         <h2 class="text-center mt-5 mb-5">Bikes</h2>
         <div class="row bikes">
-            <div class="box-bike d-flex justify-content-between col-12 col-lg-8 offset-lg-2 flex-wrap"
-                v-bind:member="bike"
-                v-for="(bike, index) in bikes"
-                v-bind:item="bike"
-                v-bind:index="index"
-                v-bind:key="bike._id"> 
-                <img :src="bike.image" alt="me"/>
-                <p>{{bike.name}}</p>
+            <div class="box-bikes col-12 col-lg-12 ">
+                <SingleBike class="box-bike"
+                    v-bind:bike="bike"
+                    v-for="(bike, index) in allBikes"
+                    v-bind:item="bike"
+                    v-bind:index="index"
+                    v-bind:key="bike._id"
+                />
             </div>
         </div>
-    </div>
+    </div>  
 </template>
 
 <script>
-import axios from 'axios'
+    import axios from 'axios'
+    import SingleBike  from './SingleBike.vue' 
+    import BikeDetailsComponent  from './BikeDetails.vue' 
+    import bikeService from '../bikeService.js'
+
+    import {eventBus} from "../main";
+    import router from '../router'
 
     export default {
         name: 'BikesComponent',
+        components: {
+            SingleBike,
+            BikeDetailsComponent
+        },
         data(){
             return {
-                bikes: []
+                allBikes: [],
+                bikeDetails: ''
             }
         },
-
         mounted() {
-            axios
-            .get('http://localhost:3001/api/bikes')
-            .then(response => (this.bikes = response.data)) 
+            localStorage.removeItem('info');
+            eventBus.$on('selectedBikeDetails', data => {
+            this.bikeDetails = data;
+            this.$store.state.bikeInfo = data
+            let sbikeDetails = JSON.stringify(this.bikeDetails)
+            localStorage.setItem('info', sbikeDetails)
+            router.push({ name: "BikeDetailsComponent" });
+            });
+        },
+        async created(){
+            try{
+                this.allBikes = await bikeService.getMembers();
+            }catch(err){
+                this.error= err.message;
+            }
         }
     }
 </script>
 
 <style scoped>
-    div.container {
-        margin: 0 auto;
-        max-width: 850px;
+    div.bikes {
+        height: 100%;
+        width: 100%;
     }
 
-    div.bikes {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-column-gap: 70px;
-        grid-row-gap: 70px;
+    div.box-bikes {
+        display: flex;
+        flex-wrap: wrap;
+        margin-right: -10px;
+        margin-bottom: -10px;
     }
 
     div.box-bike {
-        padding:20px;
-        box-shadow: 0 2px 5px 0 rgba(0,0,0,0.16), 0 2px 10px 0 rgba(0,0,0,0.12);
-
+        height: auto;
+        flex-grow: 1;
+        flex-shrink: 0;
+        flex-basis: calc(25% - 10px);
+        margin-bottom: 40px;
     }
 
-    img {
-        width: 300px;
-    }
-    
+    div.box-bike:nth-child(even) {
+	    margin: 0 10px 10px 10px;
+    } 
 </style>
